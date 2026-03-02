@@ -9,3 +9,6 @@ dependencies = [
     "tiktoken>=0.12.0",
     "torch>=2.9.1",
 ]
+
+[tool.pylint]
+disable = ["all"]

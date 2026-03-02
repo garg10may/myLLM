@@ -13,7 +13,7 @@ class CausalAttention(nn.Module):
         self.W_key = nn.Linear(d_in, d_out, bias=qkv_bias)
         self.W_value = nn.Linear(d_in, d_out, bias=qkv_bias)
         self.dropout = nn.Dropout(dropout)
-        self.register_buffer("mask", torch.triu(torch.ones(context_length, context_length)))
+        self.register_buffer("mask", torch.triu(torch.ones(context_length, context_length), diagonal=1).bool())
 
     def forward(self, x):
         b, num_tokens, d_in = x.shape #New batch dimension b
@@ -22,22 +22,24 @@ class CausalAttention(nn.Module):
         queries = self.W_query(x)
         
         attn_scores = queries @ keys.transpose(1,2)
-        attn_scores = attn_scores.masked_fill(self.mask == 0, -float("inf"))
+        causal_mask = self.mask[:num_tokens, :num_tokens]
+        attn_scores = attn_scores.masked_fill(causal_mask, -float("inf"))
         attn_weights = nn.functional.softmax(attn_scores / keys.shape[-1] ** 0.5, dim=-1)
         attn_weights = self.dropout(attn_weights)
         context_vec = attn_weights @ values
         return context_vec
 
-torch.manual_seed(123)
-context_length = 4
-d_in = 256
-d_out = 256
-batch_size = 8
-num_tokens = 4
-x = torch.randn(batch_size, num_tokens, d_in)
-causal_attn = CausalAttention(d_in, d_out, context_length, 0.1)
-context_vec = causal_attn(x)
-print(context_vec)
-print(context_vec.shape)
+    if __name__ == "__main__":
+        torch.manual_seed(123)
+        context_length = 4
+        d_in = 256
+        d_out = 256
+        batch_size = 8
+        num_tokens = 4
+        x = torch.randn(batch_size, num_tokens, d_in)
+        causal_attn = CausalAttention(d_in, d_out, context_length, 0.1)
+        context_vec = causal_attn(x)
+        print(context_vec)
+        print(context_vec.shape)
 
         
