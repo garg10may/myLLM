@@ -250,7 +250,7 @@ if __name__ == "__main__":
     d_ff = 3072  # 4 * d_out
     
     learning_rate = 1e-4
-    num_epochs = 20
+    num_epochs = 200
     batch_size = 32
     sample_prompt = "Every effort moves you"
     sample_tokens = 20
